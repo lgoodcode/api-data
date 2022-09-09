@@ -76,9 +76,9 @@ export default async function handler(req: Request, res: Response) {
 		return res.status(401).json({ error: true, message: 'Missing site ID header' })
 	}
 
-	const { limit = 200, offset = 0, start, end, property } = req.query
-	const results = []
+	const { limit = 200, offset = 0, start, end, property, meta } = req.query
 	const finalDate = new Date(end as string)
+	const results = []
 	let currDate = start as string
 	let total = 0
 	let prop: keyof Sale | [keyof Sale, keyof PurchasedItem] | [keyof Sale, keyof Payment] | undefined
@@ -92,19 +92,21 @@ export default async function handler(req: Request, res: Response) {
 	// If looking for a specific property, only return that property
 	if (property) {
 		const tokens = (property as string).split('.')
+		const isPurchasedItems = Boolean(tokens[0].match(/PurchasedItems/i)?.length)
+		const isPayments = Boolean(tokens[0].match(/Payments/i)?.length)
 
 		// Can only define two levels deep
 		if (tokens.length > 2) {
 			return res.status(400).json({ error: true, message: `Invalid property: ${property}` })
 			// If property is at the top level, set that property
-		} else if (tokens.length === 1 && tokens[0] !== 'PurchasedItems' && tokens[0] !== 'Payments') {
+		} else if (tokens.length === 1 && !isPurchasedItems && !isPayments) {
 			prop = tokens[0] as keyof Sale
 			//  Otherwise, the property is nested
 		} else {
-			if (tokens[0] === 'PurchasedItems') {
-				prop = tokens as unknown as [keyof Sale, keyof PurchasedItem]
-			} else if (tokens[0] === 'Payments') {
-				prop = tokens as unknown as [keyof Sale, keyof Payment]
+			if (isPurchasedItems) {
+				prop = ['PurchasedItems', tokens[1] as keyof PurchasedItem]
+			} else if (isPayments) {
+				prop = ['Payments', tokens[1] as keyof Payment]
 				// Invalid second level property
 			} else {
 				return res.status(400).json({ error: true, message: `Invalid property: ${property}` })
@@ -187,5 +189,9 @@ export default async function handler(req: Request, res: Response) {
 		}
 	}
 
-	return res.json({ meta: { total }, data: results })
+	if (!meta) {
+		return res.json(results)
+	} else {
+		return res.json({ meta: { totalSales: total }, data: results })
+	}
 }

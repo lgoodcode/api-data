@@ -14,7 +14,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
-    "outDir": "./build",
     "baseUrl": ".",
   },
   "include": ["src/**/*", "scripts/*", "config/*"],

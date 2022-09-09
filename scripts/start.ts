@@ -56,7 +56,10 @@ const startServer = async () => {
 		stdio: 'inherit',
 	})
 
-	server.on('error', console.error)
+	server.on('error', (err) => {
+		console.error(err)
+		process.exit(1)
+	})
 }
 
 startServer()
