@@ -35,7 +35,6 @@ const devServerOptions: webpackDevServer.Configuration = {
 	host: 'localhost',
 	hot: true,
 	compress: true,
-	open: true,
 	port: 8000,
 	headers: { 'Access-Control-Allow-Origin': '*' },
 	static: {

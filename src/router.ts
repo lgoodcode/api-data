@@ -1,13 +1,41 @@
 import express, { type Request, type Response, type NextFunction } from 'express'
-// import { check } from 'express-validator'
-// import sendEmail from './controllers/email'
-// import { getCourses, getCourseById } from './controllers/courses'
-// import { getProducts, getProductById } from './controllers/products'
+import axios from 'axios'
+import qs from 'qs'
 const router = express.Router()
 
 export default router
-	.get('/test', (req, res) => {
-		res.json({ message: 'Hello World! ' })
+	.get('/v1/sales', async (req, res) => {
+		const endpoint = 'https://api.mindbodyonline.com/public/v6/sale/sales'
+		// const { start, end } = req.query
+		try {
+			const query = `${endpoint}?${qs.stringify({
+				limit: 200,
+				offset: 0,
+				startDateTime: '2022-07-01T00:00:00Z',
+				endDateTime: '2022-08-01T00:00:00Z',
+			})}`
+
+			const { data, status, statusText } = await axios(query, {
+				headers: {
+					'Content-Type': 'application/json',
+					'Api-Key': 'f777669bdf51470e9b063ad3973bdb5d',
+					SiteId: '529254',
+				},
+			})
+
+			if (status >= 400) {
+				return res.json({
+					error: true,
+					message: 'Error fetching sales',
+					description: statusText,
+				})
+			}
+
+			return res.json(data)
+		} catch (err) {
+			console.error(err)
+			return res.json({ error: true, message: 'Error fetching sales' })
+		}
 	})
 	// .get('/courses', getCourses)
 	// .get('/courses/:id', getCourseById)
