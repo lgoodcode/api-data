@@ -7,7 +7,7 @@ const router = express.Router()
 
 export default router
 	.get('/test', (req, res) => {
-		res.json({ message: 'Hello World!' })
+		res.json({ message: 'Hello World! ' })
 	})
 	// .get('/courses', getCourses)
 	// .get('/courses/:id', getCourseById)
