@@ -1,0 +1,62 @@
+# Info on this from:
+# https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/automating-dependabot-with-github-actions
+name: Dependabot PR Approve and Merge
+
+# Using pull_request_target instead of regular PR for dependabot permissions:
+# https://github.com/dependabot/dependabot-core/issues/3253
+on: 
+  pull_request_target: 
+    branches: 
+      - CI
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    # Checking the actor will prevent your Action run failing on non-Dependabot
+    # PRs but also ensures that it only does work for Dependabot PRs.
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      # Skip duplicates and prevents workflows from running twice
+      - name: Cancel Previous Runs Actions
+        uses: LarchLiu/cancel_previous_runs@V1.1.0
+
+      # Pauses the rest of the workflow, waiting for the results of other actions,
+      # in this case, the build and test workflows.
+      - name: Wait for status checks
+        id: waitforstatuschecks
+        uses: "WyriHaximus/github-action-wait-for-status@v1.4.0"
+        with:
+          ignoreActions: automerge
+          checkInterval: 20
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      # Fetches the metatada about the dependencies being updated. The workflow
+      # will only continue if the status of the other workflows were successful,
+      # otherwise, will skip the rest of the workflow and not merge
+      - name: Dependabot metadata
+        if: steps.waitforstatuschecks.outputs.status == 'success'
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v1.3.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      # Here the PR gets approved.
+      - name: Approve a PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      # Finally, this sets the PR to allow auto-merging for patch and minor
+      # updates if all checks pass
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{ steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

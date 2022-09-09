@@ -1,0 +1,64 @@
+{
+  "name": "nick-api",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Lawrence Good",
+  "description": "",
+  "scripts": {
+    "start": "node build/main.js",
+    "build": "cross-env NODE_ENV=production ts-node scripts/build.ts",
+    "dev": "cross-env NODE_ENV=development ts-node scripts/start.ts",
+    "lint": "eslint src/**/*.{js,ts}",
+    "lint:fix": "eslint --fix src/**/*.{js,ts}"
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts}": "eslint --cache --fix"
+  },
+  "nodemon": {
+    "ts": "ts-node",
+    "watch": "./src/server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/toomuchrice4u/nick-api.git"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "compression": "^1.7.4",
+    "dotenv": "^15.0.0",
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.2.249",
+    "@types/compression": "^1.7.2",
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.23",
+    "@types/progress-bar-webpack-plugin": "^2.1.2",
+    "@types/webpack-node-externals": "^2.5.3",
+    "@typescript-eslint/eslint-plugin": "^5.16.0",
+    "@typescript-eslint/parser": "^5.16.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.12.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^16.1.4",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "fork-ts-checker-webpack-plugin": "^7.2.13",
+    "husky": "^7.0.4",
+    "lint-staged": "^12.3.8",
+    "nodemon": "^2.0.19",
+    "prettier": "^2.6.1",
+    "progress-bar-webpack-plugin": "^2.1.0",
+    "swc-loader": "^0.2.3",
+    "terser-webpack-plugin": "^5.3.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.6.3",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.11.0",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
