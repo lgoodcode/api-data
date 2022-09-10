@@ -44,4 +44,6 @@ webpack(config('production') as Configuration, (err, stats) => {
 			process.exit()
 		})
 	})
+
+	console.log(chalk.green('Build successful!'))
 })
