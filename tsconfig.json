@@ -17,5 +17,4 @@
     "baseUrl": ".",
   },
   "include": ["src/**/*", "scripts/*", "config/*"],
-  "files": ["./env.d.ts"]
 }

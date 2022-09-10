@@ -191,7 +191,6 @@ export default async function handler(req: Request, res: Response) {
 
 	if (!meta) {
 		return res.json(results)
-	} else {
-		return res.json({ meta: { totalSales: total }, data: results })
 	}
+	return res.json({ meta: { totalSales: total }, data: results })
 }

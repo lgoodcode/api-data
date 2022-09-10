@@ -1,16 +1,16 @@
 {
-  "name": "nick-api",
+  "name": "api-data",
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=18"
+    "node": "18"
   },
   "author": "Lawrence Good",
   "description": "",
   "type": "commonjs",
   "scripts": {
     "start": "node build/main.js",
-    "build": "cross-env NODE_ENV=production ts-node scripts/build.ts",
+    "build": "ts-node scripts/build.ts",
     "dev": "cross-env NODE_ENV=development ts-node  scripts/start.ts",
     "lint": "eslint --cache src/**/*.{js,ts}",
     "lint:fix": "eslint --cache --fix src/**/*.{js,ts}",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/toomuchrice4u/nick-api.git"
+    "url": "git+ssh://git@github.com/toomuchrice4u/api-data.git"
   },
   "dependencies": {
     "axios": "^0.27.2",
