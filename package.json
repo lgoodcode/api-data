@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node build/main.js",
     "build": "ts-node scripts/build.ts",
-    "dev": "cross-env NODE_ENV=development ts-node  scripts/start.ts",
+    "dev": "cross-env NODE_ENV=development node -r ts-node/register/transpile-only scripts/start.ts",
     "lint": "eslint --cache src/**/*.{js,ts}",
     "lint:fix": "eslint --cache --fix src/**/*.{js,ts}",
     "checkTypes": "npx tsc --noEmit"
