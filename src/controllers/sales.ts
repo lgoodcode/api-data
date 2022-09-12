@@ -83,12 +83,19 @@ const parseMonth = (month: string): Dayjs => {
 	return dayjs(`${new Date().getFullYear()}-${isNum ? num : m}-01`)
 }
 
+const parseYear = (year: string): Dayjs => {
+	if (!/^\d{2}|\d{4}$/.test(year)) {
+		return dayjs('invalid')
+	}
+	return dayjs(year)
+}
+
 // -999 to +999
 const RANGE_DAY = /^\-?[1-9](\d{1,2})?$/
 // -36 to +36
 const RANGE_MONTH = /^\-?[1-3]([1-6])?$/
 // -3 to +3
-// const RANGE_YEAR = /^\-?[1-3]$/
+const RANGE_YEAR = /^\-?[1-3]$/
 
 const ENDPOINT = 'https://api.mindbodyonline.com/public/v6/sale/sales'
 
@@ -111,7 +118,7 @@ export default async function handler(req: Request, res: Response) {
 	 * Determine the start and end dates
 	 */
 
-	const { limit, offset, start, end, day, month, property, range, flatten, meta } = req.query
+	const { limit, offset, start, end, day, month, year, property, range, flatten, meta } = req.query
 	let prop: keyof Sale | [keyof Sale, keyof PurchasedItem] | [keyof Sale, keyof Payment] | undefined
 	let startDate: Dayjs
 	let endDate: Dayjs
@@ -133,25 +140,28 @@ export default async function handler(req: Request, res: Response) {
 		} else if (!endDate.isValid()) {
 			return res.status(400).json({ error: 'Invalid "end" date query' })
 		}
+
 		/**
 		 * Determine the range if the specifc dates are not provided
 		 */
 	} else {
-		// Require a range for the days
-		if (day && !range) {
-			return res.status(400).json({ error: 'Missing the range' })
-		} else if (day && range) {
+		if (day) {
 			startDate = dayjs(day as string)
 
 			if (!startDate.isValid()) {
 				return res.status(400).json({ error: 'Invalid date' })
 			}
 
-			// Check if the range is valid
-			if (!RANGE_DAY.test(range as string)) {
-				return res.status(400).json({ error: 'Invalid range' })
+			// Start day with range of days
+			if (range) {
+				// Check if the range is valid
+				if (!RANGE_DAY.test(range as string)) {
+					return res.status(400).json({ error: 'Invalid range' })
+				} else {
+					endDate = startDate.endOf('day')
+				}
 			} else {
-				endDate = startDate.add(parseInt(range as string), 'day').subtract(1, 'day')
+				endDate = startDate.add(1, 'day')
 			}
 		} else if (month) {
 			startDate = parseMonth(month as string)
@@ -164,18 +174,36 @@ export default async function handler(req: Request, res: Response) {
 				if (!RANGE_MONTH.test(range as string)) {
 					return res.status(400).json({ error: 'Invalid range' })
 				} else {
+					// The month will be the first of so we subtract a day to get the last day of the desired end month
 					endDate = startDate.add(parseInt(range as string), 'month').subtract(1, 'day')
 				}
 				// If no range was specified, default to the current month
 			} else {
 				endDate = startDate.endOf('month')
 			}
+		} else if (year) {
+			startDate = parseYear(year as string)
 
+			if (!startDate.isValid()) {
+				return res.status(400).json({ error: 'Invalid year' })
+			}
+
+			if (range) {
+				if (!RANGE_YEAR.test(range as string)) {
+					return res.status(400).json({ error: 'Invalid range' })
+				} else {
+					endDate = startDate.add(parseInt(range as string), 'year').endOf('year')
+				}
+				// If no range was specified, default to the current year
+			} else {
+				endDate = startDate.endOf('year')
+			}
 			// Missing required timeframe
 		} else {
-			return res
-				.status(400)
-				.json({ error: 'Missing "start" and "end" date queries or "month" query' })
+			return res.status(400).json({
+				error:
+					'Missing "start" and "end" date queries or day/month/year query with an optional range',
+			})
 		}
 	}
 
@@ -242,7 +270,9 @@ export default async function handler(req: Request, res: Response) {
 	const results = await Promise.all(
 		dates.map(async (date) => {
 			const end = isBeforeEnd ? date.add(1, 'day') : date.subtract(1, 'day')
-			const qs = queryParams(date, end)
+			// Subtract 1 second to get the end of the previous day to prevent retrieving
+			// data from a day outside of the range
+			const qs = queryParams(date, end.subtract(1, 'second'))
 			const res = await request<SalesApiResponse>(query(ENDPOINT, qs), options)
 
 			if ('error' in res) {
@@ -308,10 +338,7 @@ export default async function handler(req: Request, res: Response) {
 			if (metaKeys.includes('total')) {
 				// The array can contain nested arrays, so add the length of it
 				metaObj.total = data.reduce((acc, curr) => {
-					if (Array.isArray(curr)) {
-						return acc + curr.length
-					}
-					return acc + 1
+					return acc + Array.isArray(curr) ? curr.length : 1
 				}, 0)
 			}
 
