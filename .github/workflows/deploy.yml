@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Use NodeJS
+        uses: actions/setup-node@master
+        with:
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Render and clear cache
+        run: |
+          curl -X POST "https://api.render.com/v1/services/${{ secrets.SERVICE_ID }}/deploys" \
+            -H 'Accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -H 'Authorization: Bearer ${{ secrets.API_KEY }}' \
+            -d '{ "clearCache": "clear" }'
+
